@@ -111,20 +111,20 @@ def classifyBatch(batch):
     y_pred = pred_fn(batch).argmax(-1)
     stats = {}
     for i in y_pred:
-        if i != 7:
+        if i != 0:
             stats[i] += 1
     return max(stats, key=stats.get)
 
 
 def indexToCoin(idx):
     idxToCoin = {
-        0: 'oneR',
-        1: 'twoR',
-        2: 'fiveR',
-        3: 'tenR',
-        4: 'fiveK',
-        5: 'tenK',
-        6: 'fiftyK',
+        1: 'oneR',
+        2: 'twoR',
+        3: 'fiveR',
+        4: 'tenR',
+        5: 'fiveK',
+        6: 'tenK',
+        7: 'fiftyK',
     }
 
     return idxToCoin[idx]
@@ -149,6 +149,7 @@ def photo():
 
         return json.dumps(result)
     except BaseException as e:
+        print 'Error: ', e
         return json.dumps({'error': e.message})
 
 
