@@ -3,6 +3,7 @@
 from flask import Flask
 from flask import request
 
+import time
 import json
 import pickle
 import numpy as np
@@ -109,7 +110,16 @@ def rotateAndBatch(imgsrc):
 
 def classifyBatch(batch):
     y_pred = pred_fn(batch).argmax(-1)
-    stats = {}
+    print y_pred
+    stats = {
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0,
+        6: 0,
+        7: 0,
+    }
     for i in y_pred:
         if i != 0:
             stats[i] += 1
@@ -136,6 +146,7 @@ app = Flask(__name__)
 @app.route('/sendphoto', methods=['POST'])
 def photo():
     try:
+        start_time = time.time()
         data = json.loads(request.data)
         photobytes = base64.b64decode(data['photo'])
         img = cv2.imdecode(np.frombuffer(photobytes, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
@@ -143,7 +154,15 @@ def photo():
         print 'Localizing coins...'
         coins = localizeCoins(img)
         print 'Found %s coins' % len(coins)
-        result = {}
+        result = {
+            'oneR': 0,
+            'twoR': 0,
+            'fiveR': 0,
+            'tenR': 0,
+            'fiveK': 0,
+            'tenK': 0,
+            'fiftyK': 0
+        }
         for c in coins:
             print 'Rotating coins...'
             batch = rotateAndBatch(c)
@@ -151,6 +170,7 @@ def photo():
             index = classifyBatch(batch)
             result[indexToCoin(index)] += 1
 
+        print("--- %s seconds ---" % (time.time() - start_time))
         return json.dumps(result)
     except BaseException as e:
         print 'Error: ', e
