@@ -88,10 +88,10 @@ def rotateAndBatch(imgsrc):
     images = []
 
     currentHeight, currentWidth = imgsrc.shape[:2]
-    x = 0.15 * currentWidth
-    y = 0.15 * currentHeight
-    w = 0.80 * currentWidth
-    h = 0.80 * currentHeight
+    x = int(0.15 * currentWidth)
+    y = int(0.15 * currentHeight)
+    w = int(0.80 * currentWidth)
+    h = int(0.80 * currentHeight)
 
     for angle in xrange(0, 360, 60):
         img = rotate_image(imgsrc, angle)[y:y + h, x:x + w]
@@ -140,10 +140,13 @@ def photo():
         photobytes = base64.b64decode(data['photo'])
         img = cv2.imdecode(np.frombuffer(photobytes, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
 
+        print 'Localizing coins...'
         coins = localizeCoins(img)
         result = {}
         for c in coins:
+            print 'Rotating coins...'
             batch = rotateAndBatch(c)
+            print 'Classifying coins...'
             index = classifyBatch(batch)
             result[indexToCoin(index)] += 1
 
