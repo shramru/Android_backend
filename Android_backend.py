@@ -12,17 +12,14 @@ import base64
 import theano
 import theano.tensor as T
 import lasagne
-from lasagne.layers import InputLayer, DenseLayer, NonlinearityLayer
-from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
+from lasagne.layers import InputLayer, DenseLayer
+from lasagne.layers import Conv2DLayer as ConvLayer
 from lasagne.layers import Pool2DLayer as PoolLayer
 from lasagne.nonlinearities import softmax
 
-
-haar_cascade = cv2.CascadeClassifier("./cascade.xml")
+haar_cascade = cv2.CascadeClassifier("cascade.xml")
 IMAGE_MEAN = pickle.load(open('mean.pkl'))
-#params = pickle.load(open('coinsvgg.pkl'))['params']
-
-app = Flask(__name__)
+# params = pickle.load(open('coinsvgg.pkl'))['params']
 
 
 def build_model():
@@ -53,8 +50,9 @@ def build_model():
 
     return net
 
+
 net = build_model()
-#lasagne.layers.set_all_param_values(net['prob'], params)
+# lasagne.layers.set_all_param_values(net['prob'], params)
 X_sym = T.tensor4()
 prediction = lasagne.layers.get_output(net['prob'], X_sym)
 pred_fn = theano.function([X_sym], prediction, allow_input_downcast=True)
@@ -110,22 +108,48 @@ def rotateAndBatch(img):
 
 
 def classifyBatch(batch):
+    y_pred = pred_fn(batch).argmax(-1)
+    stats = {}
+    for i in y_pred:
+        if i != 7:
+            stats[i] += 1
+    return max(stats, key=stats.get)
 
-    return 0
+
+def indexToCoin(idx):
+    idxToCoin = {
+        0: 'oneR',
+        1: 'twoR',
+        2: 'fiveR',
+        3: 'tenR',
+        4: 'fiveK',
+        5: 'tenK',
+        6: 'fiftyK',
+    }
+
+    return idxToCoin[idx]
+
+
+app = Flask(__name__)
 
 
 @app.route('/sendphoto', methods=['POST'])
 def photo():
-    data = json.loads(request.data)
-    photobytes = base64.b64decode(data['photo'])
-    img = cv2.imdecode(np.frombuffer(photobytes, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+    try:
+        data = json.loads(request.data)
+        photobytes = base64.b64decode(data['photo'])
+        img = cv2.imdecode(np.frombuffer(photobytes, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
 
-    coins = localizeCoins(img)
-    for c in coins:
-        batch = rotateAndBatch(c)
-        index = classifyBatch(batch)
+        coins = localizeCoins(img)
+        result = {}
+        for c in coins:
+            batch = rotateAndBatch(c)
+            index = classifyBatch(batch)
+            result[indexToCoin(index)] += 1
 
-    return 'Hello World!'
+        return json.dumps(result)
+    except BaseException as e:
+        return json.dumps({'error': e.message})
 
 
-app.run()
+app.run(host='0.0.0.0', port=5000)
