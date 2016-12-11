@@ -104,7 +104,7 @@ def rotateAndBatch(imgsrc):
 
         images.append(img)
 
-    return images
+    return np.asarray(images) / np.float32(256)
 
 
 def classifyBatch(batch):
@@ -142,6 +142,7 @@ def photo():
 
         print 'Localizing coins...'
         coins = localizeCoins(img)
+        print 'Found %s coins' % len(coins)
         result = {}
         for c in coins:
             print 'Rotating coins...'
