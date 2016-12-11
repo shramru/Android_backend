@@ -19,7 +19,7 @@ from lasagne.nonlinearities import softmax
 
 haar_cascade = cv2.CascadeClassifier("cascade.xml")
 IMAGE_MEAN = pickle.load(open('mean.pkl'))
-# params = pickle.load(open('coinsvgg.pkl'))['params']
+params = pickle.load(open('coins_model.pickle'))
 
 
 def build_model():
@@ -52,7 +52,7 @@ def build_model():
 
 
 net = build_model()
-# lasagne.layers.set_all_param_values(net['prob'], params)
+lasagne.layers.set_all_param_values(net['prob'], params)
 X_sym = T.tensor4()
 prediction = lasagne.layers.get_output(net['prob'], X_sym)
 pred_fn = theano.function([X_sym], prediction, allow_input_downcast=True)
