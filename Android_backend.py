@@ -84,16 +84,16 @@ def rotate_image(image, angle):
     return result
 
 
-def rotateAndBatch(img):
+def rotateAndBatch(imgsrc):
     images = []
 
-    for angle in xrange(0, 360, 60):
-        currentHeight, currentWidth = img.shape[:2]
-        x = 0.15 * currentWidth
-        y = 0.15 * currentHeight
-        w = 0.80 * currentWidth
-        h = 0.80 * currentHeight
+    currentHeight, currentWidth = imgsrc.shape[:2]
+    x = 0.15 * currentWidth
+    y = 0.15 * currentHeight
+    w = 0.80 * currentWidth
+    h = 0.80 * currentHeight
 
+    for angle in xrange(0, 360, 60):
         img = rotate_image(imgsrc, angle)[y:y + h, x:x + w]
         img = cv2.resize(img, (224, 224), interpolation=cv2.INTER_CUBIC)
         img = np.swapaxes(np.swapaxes(img, 1, 2), 0, 1)
